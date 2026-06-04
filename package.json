@@ -1,0 +1,13 @@
+{
+  "name": "aurum",
+  "version": "1.0.0",
+  "description": "A cinematic, full-scroll website that uses all 10 of your black-and-gold images as immersive section backgrounds.",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  }
+}
