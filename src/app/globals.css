@@ -1,0 +1,348 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   AURUM — CSS Custom Properties
+   ============================================ */
+:root {
+  /* PRIMARY PALETTE */
+  --aurum-void: #0A0806;
+  --aurum-obsidian: #12100D;
+  --aurum-shadow: #1C1916;
+  --aurum-mist: #2A2520;
+
+  /* GOLD RAMP */
+  --aurum-gold-dim: #7A5C2E;
+  --aurum-gold: #C69B3C;
+  --aurum-gold-glow: #E8B84B;
+  --aurum-gold-pale: #F5D98A;
+
+  /* IVORY SCALE */
+  --aurum-ivory-deep: #8A7B68;
+  --aurum-ivory-mid: #C4B49A;
+  --aurum-ivory: #F4EADE;
+  --aurum-cream: #FAF6F0;
+
+  /* GEMSTONE ACCENTS */
+  --aurum-ruby: #8B1A2E;
+  --aurum-sapphire: #1A3A6B;
+  --aurum-emerald: #0D4C3C;
+  --aurum-diamond: #E8F0F8;
+
+  /* TYPOGRAPHY */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-accent: 'Space Grotesk', monospace;
+}
+
+/* ============================================
+   GLOBAL RESETS
+   ============================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: auto; /* Lenis handles smooth scroll */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--aurum-void);
+  color: var(--aurum-ivory);
+  font-family: var(--font-body);
+  letter-spacing: 0.01em;
+  overflow-x: hidden;
+  /* Hide default cursor globally — custom cursor replaces it */
+}
+
+/* Custom cursor — hide on touch devices */
+@media (pointer: fine) {
+  body {
+    cursor: none;
+  }
+  a, button, [role="button"], input, select, textarea {
+    cursor: none;
+  }
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--aurum-void);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--aurum-gold-dim);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--aurum-gold);
+}
+
+/* ============================================
+   SELECTION HIGHLIGHT
+   ============================================ */
+::selection {
+  background: rgba(198, 155, 60, 0.3);
+  color: var(--aurum-cream);
+}
+
+/* ============================================
+   TYPOGRAPHY UTILITIES
+   ============================================ */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #7A5C2E, #C69B3C, #E8B84B, #F5D98A, #E8B84B, #C69B3C);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gold-shimmer {
+  background: linear-gradient(90deg, #C69B3C, #E8B84B, #F5D98A, #E8B84B, #C69B3C);
+  background-size: 400% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: goldTextShimmer 4s ease-in-out infinite;
+}
+
+/* ============================================
+   GOLD SHIMMER / LOADING SKELETON
+   ============================================ */
+.skeleton-gold {
+  background: linear-gradient(
+    90deg,
+    var(--aurum-shadow) 25%,
+    var(--aurum-mist) 50%,
+    var(--aurum-shadow) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   GOLD BORDER GLOW
+   ============================================ */
+.border-gold-glow {
+  border: 1px solid var(--aurum-gold-dim);
+  box-shadow: 0 0 0 0 rgba(198, 155, 60, 0);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.border-gold-glow:hover {
+  border-color: var(--aurum-gold);
+  box-shadow: 0 0 20px rgba(198, 155, 60, 0.15);
+}
+
+/* ============================================
+   GLASS MORPHISM
+   ============================================ */
+.glass {
+  background: rgba(18, 16, 13, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(198, 155, 60, 0.15);
+}
+
+.glass-dark {
+  background: rgba(10, 8, 6, 0.85);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(198, 155, 60, 0.1);
+}
+
+/* ============================================
+   BUTTON STYLES
+   ============================================ */
+.btn-gold {
+  background: var(--aurum-gold);
+  color: var(--aurum-void);
+  font-family: var(--font-body);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: none;
+  padding: 16px 40px;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-gold::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  transition: left 0.6s ease;
+}
+
+.btn-gold:hover {
+  background: var(--aurum-gold-glow);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(198, 155, 60, 0.3);
+}
+
+.btn-gold:hover::before {
+  left: 100%;
+}
+
+.btn-gold:active {
+  transform: translateY(0);
+}
+
+.btn-outline-gold {
+  background: transparent;
+  color: var(--aurum-cream);
+  font-family: var(--font-body);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid var(--aurum-gold-dim);
+  padding: 16px 40px;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-outline-gold:hover {
+  border-color: var(--aurum-gold);
+  color: var(--aurum-gold);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(198, 155, 60, 0.15);
+}
+
+/* ============================================
+   NAV LINK GOLD UNDERLINE
+   ============================================ */
+.nav-link {
+  position: relative;
+  color: var(--aurum-ivory-mid);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--aurum-gold);
+  transition: width 0.3s ease-out;
+}
+
+.nav-link:hover {
+  color: var(--aurum-cream);
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* ============================================
+   SCROLL CHAPTER OVERLAY PATTERN (FIX 2)
+   ============================================ */
+.scroll-chapter {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  pointer-events: none;
+  height: 100vh;
+  width: 100%;
+}
+
+.scroll-chapter-content {
+  pointer-events: auto;
+}
+
+/* ============================================
+   NOSCRIPT FALLBACK
+   ============================================ */
+.noscript-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--aurum-void);
+  color: var(--aurum-ivory);
+  text-align: center;
+  padding: 2rem;
+}
+
+.noscript-fallback h1 {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 700;
+  font-style: italic;
+  color: var(--aurum-gold);
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.noscript-fallback p {
+  font-family: var(--font-body);
+  font-size: 1.125rem;
+  color: var(--aurum-ivory-mid);
+  max-width: 32rem;
+  line-height: 1.7;
+}
+
+/* ============================================
+   KEYFRAMES
+   ============================================ */
+@keyframes goldTextShimmer {
+  0% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+  100% { background-position: 0% center; }
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes curtainDown {
+  0% { transform: scaleY(0); transform-origin: top; }
+  100% { transform: scaleY(1); transform-origin: top; }
+}
+
+@keyframes curtainUp {
+  0% { transform: scaleY(1); transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
+
+/* ============================================
+   RESPONSIVE UTILITIES
+   ============================================ */
+@media (max-width: 768px) {
+  .scroll-chapter {
+    min-height: 100svh; /* Use small viewport height on mobile */
+  }
+}
+
+/* Disable custom cursor on touch devices */
+@media (pointer: coarse) {
+  body {
+    cursor: auto !important;
+  }
+  a, button, [role="button"], input, select, textarea {
+    cursor: auto !important;
+  }
+}

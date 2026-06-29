@@ -1,70 +1,36 @@
-# AURUM — A Luxury Black & Gold Experience
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-A cinematic, full-scroll website that uses all 10 of your black-and-gold images as immersive section backgrounds.
+## Getting Started
 
----
+First, run the development server:
 
-## Setup
-
-### Option A — Node.js (Recommended)
 ```bash
-node server.js
-# Open http://localhost:3000
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-### Option B — Python
-```bash
-python3 -m http.server 3000
-# Open http://localhost:3000
-```
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### Option C — VS Code Live Server
-Install the "Live Server" extension, right-click index.html → "Open with Live Server".
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
----
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Structure
+## Learn More
 
-```
-gold-website/
-├── index.html          ← Main website file (all HTML/CSS/JS)
-├── server.js           ← Tiny Node.js dev server
-└── public/
-    └── images/         ← Your 10 gold images (copy them here)
-        ├── autumn-leave-falling-down-black-surface.jpg
-        ├── gold-glitter-particles-explosion-bokeh-background.jpg
-        ├── golden-reflections-background.jpg
-        ├── 5505783.jpg
-        ├── 5506461.jpg
-        ├── 5739638.jpg
-        ├── 5802961.jpg
-        ├── 6160399.jpg
-        ├── 6209554.jpg
-        └── 24783.jpg
-```
+To learn more about Next.js, take a look at the following resources:
 
----
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## Features
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-- **Custom gold cursor** with magnetic ring
-- **Cinematic loading screen** with animated progress bar
-- **GSAP ScrollTrigger** animations (parallax, reveal-up, reveal-left, reveal-right, scale)
-- **Floating particle system** (canvas-based gold particles)
-- **Scroll progress bar** at the top
-- **Animated counter** (5,000+ years counter)
-- **Marquee text strip** between hero and sections
-- **9 immersive full-screen sections** — one per image chapter
-- **Magnetic nav links**
-- **Glitch text effect** on hero title
-- **Responsive design**
+## Deploy on Vercel
 
----
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-## Customization
-
-Edit `index.html`:
-- Change the site title/tagline in the `<title>` and `.hero-title`
-- Swap section copy in each `<section>`
-- Adjust `--gold` CSS variable to shift the gold tone
-- Add your own Google Font by replacing the `@import` URL
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
