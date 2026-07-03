@@ -21,43 +21,66 @@ export function ProceduralNecklace({
   const currentScale = useRef(0);
   const currentOpacity = useRef(0);
 
-  // Create chain links as a catenary curve
+  // Smooth snake chain hanging down naturally
   const chainCurve = useMemo(() => {
     const points: THREE.Vector3[] = [];
-    const segments = 100;
+    const segments = 150;
     for (let i = 0; i <= segments; i++) {
       const t = (i / segments) * Math.PI;
-      const x = (t - Math.PI / 2) * 1.2;
-      // Catenary curve: y = a * cosh(x/a) - offset
-      const y = -0.4 * Math.cosh(x / 0.8) + 1.2;
-      const z = Math.sin(t * 0.5) * 0.1;
+      const x = (t - Math.PI / 2) * 1.5;
+      // Elegant natural hanging curve
+      const y = 0.9 * Math.cosh(x / 0.9) - 1.4;
+      const z = Math.sin(t) * 0.3 - 0.3; // Curves around the neck backward
       points.push(new THREE.Vector3(x, y, z));
     }
     return new THREE.CatmullRomCurve3(points);
   }, []);
 
-  const chainGeometry = useMemo(() => {
-    return new THREE.TubeGeometry(chainCurve, 120, 0.015, 12, false);
-  }, [chainCurve]);
-
-  // Pendant — teardrop shape using lathe geometry
-  const pendantGeometry = useMemo(() => {
-    const pts: THREE.Vector2[] = [];
-    // Teardrop profile
-    for (let i = 0; i < 20; i++) {
-      const t = i / 19;
-      const r = Math.sin(t * Math.PI) * 0.12 * (1 - t * 0.3);
-      const y = t * 0.3 - 0.15;
-      pts.push(new THREE.Vector2(r, y));
+  const chainGeometry = useMemo(() => new THREE.TubeGeometry(chainCurve, 256, 0.012, 16, false), [chainCurve]);
+  
+  // Elegant pear-shaped diamond
+  const diamondGeo = useMemo(() => {
+    const geo = new THREE.IcosahedronGeometry(0.25, 0);
+    const positions = geo.attributes.position;
+    for (let i = 0; i < positions.count; i++) {
+      const x = positions.getX(i);
+      const y = positions.getY(i);
+      const z = positions.getZ(i);
+      
+      // Shape it into a pear/teardrop
+      if (y > 0.1) {
+        positions.setY(i, 0.1); // flatten table
+      } else if (y < 0) {
+        positions.setY(i, y * 2.0); // stretch bottom
+      }
+      
+      // Taper the top slightly
+      if (y > 0) {
+        positions.setX(i, x * 0.8);
+        positions.setZ(i, z * 0.8);
+      }
     }
-    pts.push(new THREE.Vector2(0, 0.15)); // Top point
-    return new THREE.LatheGeometry(pts, 24);
+    geo.computeVertexNormals();
+    return geo;
   }, []);
 
-  // Bail (connector between chain and pendant)
-  const bailGeometry = useMemo(() => {
-    return new THREE.TorusGeometry(0.04, 0.008, 8, 16, Math.PI);
+  // Small gold bail (connector)
+  const bailGeo = useMemo(() => {
+    const geo = new THREE.TorusGeometry(0.04, 0.012, 32, 64);
+    geo.scale(1, 1.5, 1);
+    return geo;
   }, []);
+
+  // V-prong at the bottom tip of the pear diamond
+  const bottomProngGeo = useMemo(() => {
+    const geo = new THREE.ConeGeometry(0.04, 0.1, 16);
+    return geo;
+  }, []);
+
+  const pendantPos = useMemo(() => {
+    const point = chainCurve.getPoint(0.5); // Center of the curve
+    return [point.x, point.y - 0.04, point.z] as [number, number, number];
+  }, [chainCurve]);
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
@@ -69,68 +92,66 @@ export function ProceduralNecklace({
     groupRef.current.visible = visible && currentScale.current > 0.01;
 
     // Gentle sway
-    groupRef.current.rotation.y += delta * 0.15;
-    groupRef.current.rotation.z = Math.sin(state.clock.getElapsedTime() * 0.5) * 0.03;
+    const time = state.clock.getElapsedTime();
+    groupRef.current.rotation.y = Math.sin(time * 0.5) * 0.1;
+    groupRef.current.rotation.z = Math.sin(time * 0.3) * 0.05;
 
     groupRef.current.traverse((child) => {
-      if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+      if (child instanceof THREE.Mesh && child.material instanceof THREE.Material) {
         child.material.opacity = currentOpacity.current;
         child.material.transparent = currentOpacity.current < 0.99;
       }
     });
   });
 
-  // Chain bottom center point for pendant placement
-  const pendantPos = useMemo(() => {
-    const point = chainCurve.getPoint(0.5);
-    return [point.x, point.y - 0.15, point.z] as [number, number, number];
-  }, [chainCurve]);
-
   return (
     <group ref={groupRef} position={position}>
       {/* Chain */}
       <mesh geometry={chainGeometry}>
-        <meshStandardMaterial
-          color="#C69B3C"
-          metalness={0.98}
-          roughness={0.05}
-          envMapIntensity={3.0}
-        />
+        <meshStandardMaterial color="#E8E8E8" metalness={1.0} roughness={0.05} envMapIntensity={5.0} />
       </mesh>
 
-      {/* Bail */}
-      <mesh geometry={bailGeometry} position={[pendantPos[0], pendantPos[1] + 0.04, pendantPos[2]]} rotation={[0, 0, 0]}>
-        <meshStandardMaterial
-          color="#C69B3C"
-          metalness={0.98}
-          roughness={0.05}
-          envMapIntensity={3.0}
-        />
-      </mesh>
+      {/* Pendant Assembly */}
+      <group position={pendantPos}>
+        {/* Bail (attaches pendant to chain) */}
+        <mesh geometry={bailGeo} position={[0, 0.1, 0]} rotation={[0, Math.PI / 2, 0]}>
+          <meshStandardMaterial color="#E8E8E8" metalness={1.0} roughness={0.05} envMapIntensity={5.0} />
+        </mesh>
 
-      {/* Pendant */}
-      <mesh geometry={pendantGeometry} position={pendantPos}>
-        <meshStandardMaterial
-          color="#C69B3C"
-          metalness={0.98}
-          roughness={0.04}
-          envMapIntensity={3.5}
-        />
-      </mesh>
-
-      {/* Small diamond on pendant */}
-      <mesh position={[pendantPos[0], pendantPos[1], pendantPos[2] + 0.05]}>
-        <icosahedronGeometry args={[0.04, 2]} />
-        <meshPhysicalMaterial
-          color="#E8F0F8"
-          metalness={0.0}
-          roughness={0.0}
-          transmission={0.95}
-          thickness={0.3}
-          ior={2.42}
-          envMapIntensity={3.0}
-        />
-      </mesh>
+        {/* The Pear Diamond */}
+        <mesh geometry={diamondGeo} position={[0, -0.15, 0]}>
+          {/* @ts-ignore - dispersion is available in newer three.js */}
+          <meshPhysicalMaterial
+            color="#FFFFFF"
+            transmission={1.0}
+            opacity={1}
+            metalness={0}
+            roughness={0}
+            ior={2.42}
+            thickness={0.8}
+            dispersion={1.5} // Fire/Rainbow effect!
+            envMapIntensity={6.0}
+            clearcoat={1.0}
+            clearcoatRoughness={0.0}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+        
+        {/* Bottom V-Prong securing the tip */}
+        <mesh geometry={bottomProngGeo} position={[0, -0.63, 0]} rotation={[0, 0, Math.PI]}>
+          <meshStandardMaterial color="#E8E8E8" metalness={1.0} roughness={0.05} envMapIntensity={5.0} />
+        </mesh>
+        
+        {/* Top Prongs */}
+        <mesh position={[-0.15, 0.0, 0]} rotation={[0, 0, -Math.PI / 8]}>
+          <cylinderGeometry args={[0.015, 0.015, 0.1, 16]} />
+          <meshStandardMaterial color="#E8E8E8" metalness={1.0} roughness={0.05} envMapIntensity={5.0} />
+        </mesh>
+        <mesh position={[0.15, 0.0, 0]} rotation={[0, 0, Math.PI / 8]}>
+          <cylinderGeometry args={[0.015, 0.015, 0.1, 16]} />
+          <meshStandardMaterial color="#E8E8E8" metalness={1.0} roughness={0.05} envMapIntensity={5.0} />
+        </mesh>
+      </group>
     </group>
   );
 }

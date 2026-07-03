@@ -36,7 +36,7 @@ const vertexShader = `
 
     vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
     // Smaller point size for subtle stardust
-    gl_PointSize = (aSize * 30.0 / max(-mvPos.z, 1.0)) * (0.3 + uCollapse * 0.7);
+    gl_PointSize = (aSize * 20.0 / max(-mvPos.z, 1.0)) * (0.3 + uCollapse * 0.7);
     gl_Position = projectionMatrix * mvPos;
 
     // Fade particles as they collapse into ring
@@ -69,7 +69,7 @@ export function GoldParticles({ visible, collapse, isMobile }: GoldParticlesProp
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
   // FIX 3: Particle count determined by device, reduced to prevent WebGL blowout
-  const COUNT = isMobile ? 10000 : 35000;
+  const COUNT = isMobile ? 5000 : 20000;
 
   const { positions, initialPositions, targetPositions, sizes, speeds } = useMemo(() => {
     const positions = new Float32Array(COUNT * 3);

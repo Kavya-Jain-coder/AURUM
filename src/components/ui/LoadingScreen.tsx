@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { useUiStore } from '@/store/uiStore';
 
 /**
@@ -13,19 +14,19 @@ export function LoadingScreen() {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Simulate loading progress
+    // Simulate loading progress — deliberately slow for luxury feel
     const interval = setInterval(() => {
       setProgress((prev) => {
-        const next = prev + Math.random() * 15;
+        const next = prev + Math.random() * 8 + 1;
         if (next >= 100) {
           clearInterval(interval);
-          // Small delay before hiding loader
-          setTimeout(() => setIsLoading(false), 600);
+          // Longer pause at 100% for dramatic effect
+          setTimeout(() => setIsLoading(false), 900);
           return 100;
         }
         return next;
       });
-    }, 200);
+    }, 350);
 
     return () => clearInterval(interval);
   }, [setIsLoading]);
@@ -54,16 +55,22 @@ export function LoadingScreen() {
 
           <div className="relative z-10 flex flex-col items-center w-full max-w-md px-8">
             {/* Logo Reveal */}
-            <div className="overflow-hidden pb-2 mb-12">
-              <motion.h1
-                initial={{ y: '100%' }}
-                animate={{ y: '0%' }}
+            <div className="overflow-hidden pb-2 mb-12 flex justify-center w-full">
+              <motion.div
+                initial={{ y: '100%', opacity: 0 }}
+                animate={{ y: '0%', opacity: 1 }}
                 transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-                className="font-display font-bold italic text-aurum-gold text-4xl md:text-6xl tracking-widest"
-                style={{ letterSpacing: '0.4em' }}
+                className="relative w-80 h-28 select-none pointer-events-none"
               >
-                AURUM
-              </motion.h1>
+                <Image
+                  src="/images/Aurum_Logo.png"
+                  alt="AURUM Logo"
+                  fill
+                  className="object-contain"
+                  style={{ filter: 'brightness(1.3) contrast(1.1)', mixBlendMode: 'screen', transform: 'scale(3.5)' }}
+                  priority
+                />
+              </motion.div>
             </div>
 
             {/* Luxury Line Progress */}

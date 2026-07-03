@@ -17,132 +17,111 @@ export function ProceduralEarrings({
   scale: targetScale,
   position = [0, 0, 0],
 }: ProceduralEarringsProps) {
-  const groupRef = useRef<THREE.Group>(null);
+  const leftGroupRef = useRef<THREE.Group>(null);
+  const rightGroupRef = useRef<THREE.Group>(null);
   const currentScale = useRef(0);
   const currentOpacity = useRef(0);
 
-  // Post geometry (the back of the earring)
-  const postGeometry = useMemo(() => {
-    return new THREE.CylinderGeometry(0.012, 0.012, 0.25, 8);
+  // Stud (top part)
+  const studGeo = useMemo(() => new THREE.OctahedronGeometry(0.1, 1), []);
+  
+  // Connecting chain / drop bar
+  const dropGeo = useMemo(() => new THREE.CylinderGeometry(0.01, 0.01, 0.8, 8), []);
+
+  // Main teardrop pendant (lattice / wireframe look using Lathe and multiple rotated meshes)
+  const teardropGeo = useMemo(() => {
+    const pts: THREE.Vector2[] = [];
+    for (let i = 0; i <= 20; i++) {
+      const t = i / 20;
+      const r = Math.sin(t * Math.PI) * 0.25 * (1 - t * 0.5);
+      const y = t * 0.6 - 0.3;
+      pts.push(new THREE.Vector2(r, y));
+    }
+    return new THREE.LatheGeometry(pts, 32);
   }, []);
 
-  // Setting bezel
-  const bezelGeometry = useMemo(() => {
-    return new THREE.TorusGeometry(0.1, 0.015, 12, 24);
-  }, []);
-
-  // Diamond
-  const diamondGeoTop = useMemo(() => {
-    return new THREE.ConeGeometry(0.09, 0.06, 8, 1);
-  }, []);
-
-  const diamondGeoBottom = useMemo(() => {
-    return new THREE.ConeGeometry(0.09, 0.08, 8, 1);
-  }, []);
-
-  // Butterfly back
-  const butterflyGeometry = useMemo(() => {
-    const shape = new THREE.Shape();
-    shape.moveTo(0, 0);
-    shape.bezierCurveTo(0.04, 0.02, 0.06, 0.04, 0.03, 0.06);
-    shape.bezierCurveTo(0, 0.08, -0.03, 0.06, -0.03, 0.06);
-    shape.bezierCurveTo(-0.06, 0.04, -0.04, 0.02, 0, 0);
-    const extrudeSettings = { depth: 0.01, bevelEnabled: false };
-    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  }, []);
+  const stoneGeo = useMemo(() => new THREE.OctahedronGeometry(0.15, 2), []);
 
   useFrame((state, delta) => {
-    if (!groupRef.current) return;
+    if (!leftGroupRef.current || !rightGroupRef.current) return;
 
     currentOpacity.current = THREE.MathUtils.lerp(currentOpacity.current, opacity, 0.05);
     currentScale.current = THREE.MathUtils.lerp(currentScale.current, targetScale, 0.05);
 
-    groupRef.current.scale.setScalar(Math.max(currentScale.current, 0.001));
-    groupRef.current.visible = visible && currentScale.current > 0.01;
+    const s = Math.max(currentScale.current, 0.001);
+    leftGroupRef.current.scale.setScalar(s);
+    rightGroupRef.current.scale.setScalar(s);
+    
+    leftGroupRef.current.visible = visible && currentScale.current > 0.01;
+    rightGroupRef.current.visible = visible && currentScale.current > 0.01;
 
-    // Gentle float animation
-    groupRef.current.rotation.y += delta * 0.25;
-    const t = state.clock.getElapsedTime();
-    groupRef.current.position.y = position[1] + Math.sin(t * 0.8) * 0.05;
+    // Elegant swaying motion for the earrings
+    const time = state.clock.getElapsedTime();
+    const sway = Math.sin(time * 0.8) * 0.1;
+    const twist = Math.sin(time * 0.4) * 0.2;
 
-    groupRef.current.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        if (child.material instanceof THREE.MeshStandardMaterial || child.material instanceof THREE.MeshPhysicalMaterial) {
-          child.material.opacity = currentOpacity.current;
-          child.material.transparent = currentOpacity.current < 0.99;
-        }
+    leftGroupRef.current.rotation.z = sway;
+    leftGroupRef.current.rotation.y = twist;
+    
+    rightGroupRef.current.rotation.z = sway;
+    rightGroupRef.current.rotation.y = -twist;
+
+    const updateMaterial = (child: THREE.Object3D) => {
+      if (child instanceof THREE.Mesh && child.material instanceof THREE.Material) {
+        child.material.opacity = currentOpacity.current;
+        child.material.transparent = currentOpacity.current < 0.99;
       }
-    });
+    };
+    
+    leftGroupRef.current.traverse(updateMaterial);
+    rightGroupRef.current.traverse(updateMaterial);
   });
 
-  const renderStud = (xOffset: number) => (
-    <group position={[xOffset, 0, 0]}>
-      {/* Post */}
-      <mesh geometry={postGeometry} position={[0, -0.12, 0]}>
-        <meshStandardMaterial
-          color="#C69B3C"
-          metalness={0.98}
-          roughness={0.05}
-          envMapIntensity={3.0}
-        />
-      </mesh>
-
-      {/* Bezel setting */}
-      <mesh geometry={bezelGeometry} rotation={[Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-        <meshStandardMaterial
-          color="#C69B3C"
-          metalness={0.98}
-          roughness={0.05}
-          envMapIntensity={3.0}
-        />
-      </mesh>
-
-      {/* Diamond top (crown) */}
-      <mesh geometry={diamondGeoTop} position={[0, 0.06, 0]}>
+  const renderEarring = () => (
+    <>
+      {/* Stud */}
+      <mesh geometry={studGeo} position={[0, 0.8, 0]}>
         <meshPhysicalMaterial
-          color="#E8F0F8"
-          metalness={0.0}
-          roughness={0.0}
-          transmission={0.95}
-          thickness={0.3}
-          ior={2.42}
-          envMapIntensity={4.0}
-          clearcoat={1.0}
+          color="#FFFFFF" metalness={0.1} roughness={0.0} transmission={0.95} thickness={0.5} ior={2.42} envMapIntensity={5.0}
         />
       </mesh>
+      
+      {/* Stud base setting */}
+      <mesh position={[0, 0.8, -0.05]}>
+        <cylinderGeometry args={[0.11, 0.05, 0.05, 8]} />
+        <meshStandardMaterial color="#E8E8E8" metalness={0.95} roughness={0.1} envMapIntensity={3.0} />
+      </mesh>
 
-      {/* Diamond bottom (pavilion) */}
-      <mesh geometry={diamondGeoBottom} position={[0, -0.02, 0]} rotation={[Math.PI, 0, 0]}>
+      {/* Drop Bar */}
+      <mesh geometry={dropGeo} position={[0, 0.35, 0]}>
+        <meshStandardMaterial color="#E8E8E8" metalness={1.0} roughness={0.05} envMapIntensity={4.0} />
+      </mesh>
+
+      {/* Teardrop Gold Cage */}
+      <mesh geometry={teardropGeo} position={[0, -0.2, 0]}>
+        <meshStandardMaterial color="#E8E8E8" metalness={1.0} roughness={0.1} envMapIntensity={4.5} wireframe wireframeLinewidth={2} />
+      </mesh>
+
+      {/* Center Stone in Teardrop */}
+      <mesh geometry={stoneGeo} position={[0, -0.3, 0]}>
         <meshPhysicalMaterial
-          color="#E8F0F8"
-          metalness={0.0}
-          roughness={0.0}
-          transmission={0.95}
-          thickness={0.3}
-          ior={2.42}
-          envMapIntensity={4.0}
-          clearcoat={1.0}
+          color="#E8F0F8" metalness={0.0} roughness={0.0} transmission={0.95} thickness={0.5} ior={2.42} envMapIntensity={6.0}
         />
       </mesh>
-
-      {/* Butterfly back */}
-      <mesh geometry={butterflyGeometry} position={[0, -0.22, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <meshStandardMaterial
-          color="#C69B3C"
-          metalness={0.95}
-          roughness={0.1}
-          envMapIntensity={2.0}
-        />
-      </mesh>
-    </group>
+    </>
   );
 
   return (
-    <group ref={groupRef} position={position}>
-      {/* Left earring */}
-      {renderStud(-0.5)}
-      {/* Right earring */}
-      {renderStud(0.5)}
+    <group position={position}>
+      {/* Left Earring */}
+      <group ref={leftGroupRef} position={[-0.8, 0, 0]}>
+        {renderEarring()}
+      </group>
+
+      {/* Right Earring */}
+      <group ref={rightGroupRef} position={[0.8, 0, 0]}>
+        {renderEarring()}
+      </group>
     </group>
   );
 }

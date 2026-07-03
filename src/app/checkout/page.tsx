@@ -1,23 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '@/store/cartStore';
 import { formatPrice } from '@/lib/products';
 import { Navbar } from '@/components/ui/Navbar';
-import { AurumCursor } from '@/components/ui/AurumCursor';
 import Link from 'next/link';
 
 type Step = 1 | 2 | 3;
 
 /**
  * FIX 4: Auth gate triggers at payment step (Step 2), NOT at page load.
- * Inline auth modal — does not navigate away. Cart persists in localStorage.
+ * Uses NextAuth.js useSession — inline auth modal, cart persists in localStorage.
  */
 export default function CheckoutPage() {
+  const [isMounted, setIsMounted] = useState(false);
   const [step, setStep] = useState<Step>(1);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Mock auth state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authEmail, setAuthEmail] = useState('');
   const [authSent, setAuthSent] = useState(false);
   const [couponCode, setCouponCode] = useState('');
@@ -38,6 +38,13 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState({
     name: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '',
   });
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) return null;
 
   const handleStep2 = () => {
     // FIX 4: Check auth ONLY at payment step
@@ -48,17 +55,18 @@ export default function CheckoutPage() {
     setStep(2);
   };
 
-  const handleMockAuth = () => {
-    // Mock authentication
-    setIsAuthenticated(true);
-    setShowAuthModal(false);
-    setStep(2);
+  const handleGoogleAuth = async () => {
+    // NextAuth.js Google sign-in
+    const { signIn } = await import('next-auth/react');
+    signIn('google', { callbackUrl: '/checkout' });
   };
 
   const handleMagicLink = () => {
     if (authEmail) {
       setAuthSent(true);
-      // Mock: auto-authenticate after 2 seconds
+      // When email provider is configured, this will call:
+      // signIn('email', { email: authEmail, callbackUrl: '/checkout' })
+      // For now, mock auto-auth after 2 seconds
       setTimeout(() => {
         setIsAuthenticated(true);
         setShowAuthModal(false);
@@ -67,9 +75,41 @@ export default function CheckoutPage() {
     }
   };
 
-  const handlePlaceOrder = () => {
-    setStep(3);
-    clearCart();
+
+
+  const handlePlaceOrder = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+
+    try {
+      const { createOrder, openRazorpayCheckout } = await import('@/lib/razorpay');
+      
+      // Create order on the server
+      const order = await createOrder(grandTotal);
+      
+      // Open Razorpay Checkout Modal
+      await openRazorpayCheckout({
+        orderId: order.id,
+        amount: grandTotal,
+        customerName: address.name || 'Valued Client',
+        customerEmail: authEmail || 'client@aurum.com',
+        customerPhone: address.phone || '0000000000',
+        onSuccess: (res) => {
+          console.log('Payment success:', res);
+          setStep(3);
+          clearCart();
+          setIsProcessing(false);
+        },
+        onFailure: (err) => {
+          console.error('Payment failed:', err);
+          setIsProcessing(false);
+          // Show error toast or similar if we had one
+        },
+      });
+    } catch (err) {
+      console.error('Error initiating payment:', err);
+      setIsProcessing(false);
+    }
   };
 
   const handleApplyCoupon = () => {
@@ -86,7 +126,6 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <AurumCursor />
       <Navbar />
 
       <main className="min-h-screen bg-aurum-void pt-20 pb-20">
@@ -268,8 +307,19 @@ export default function CheckoutPage() {
                     )}
                   </div>
 
-                  <button onClick={handlePlaceOrder} className="btn-gold w-full text-sm py-4 mt-8">
-                    Place Order — {formatPrice(grandTotal)}
+                  <button 
+                    onClick={handlePlaceOrder} 
+                    disabled={isProcessing}
+                    className="btn-gold w-full text-sm py-4 mt-8 flex justify-center items-center gap-2 disabled:opacity-70"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-aurum-void border-t-transparent rounded-full animate-spin"></span>
+                        Processing...
+                      </>
+                    ) : (
+                      `Place Order — ${formatPrice(grandTotal)}`
+                    )}
                   </button>
                 </motion.div>
               )}
@@ -405,7 +455,7 @@ export default function CheckoutPage() {
 
               {/* Google OAuth */}
               <button
-                onClick={handleMockAuth}
+                onClick={handleGoogleAuth}
                 className="w-full flex items-center justify-center gap-3 bg-white text-gray-800 font-body text-sm font-medium py-3 px-4 rounded hover:bg-gray-100 transition-colors"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">

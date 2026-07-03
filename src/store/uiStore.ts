@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 interface UiState {
   // Scroll
-  scrollProgress: number;       // 0–1 across entire 500vh
+  scrollProgress: number;       // 0–1 across entire 1000vh
   activeChapter: number;        // 0–4
   chapterProgress: number;      // 0–1 within active chapter
 

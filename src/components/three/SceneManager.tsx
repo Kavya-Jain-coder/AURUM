@@ -31,7 +31,7 @@ export function SceneManager() {
 
   // Chapter-specific camera animation using continuous math
   useFrame(() => {
-    let targetPos = new THREE.Vector3(0, 0, 5);
+    const targetPos = new THREE.Vector3(0, 0, 5);
     let targetFov = 35;
     
     // Evaluate continuous camera position based on global scroll progress
@@ -92,11 +92,13 @@ export function SceneManager() {
   return (
     <group ref={groupRef}>
       {/* Lighting */}
-      <ambientLight intensity={0.15} color="#F5D98A" />
+      <ambientLight intensity={0.2} color="#F5D98A" />
       <directionalLight position={[5, 5, 5]} intensity={0.8} color="#F4EADE" />
       <directionalLight position={[-3, 2, -3]} intensity={0.3} color="#C69B3C" />
       <pointLight position={[0, -2, 3]} intensity={0.5} color="#E8B84B" distance={10} />
-      <Environment preset="city" environmentIntensity={0.6} />
+      {/* Rim light — dramatic backlight for silhouette edges */}
+      <directionalLight position={[-2, 1, -5]} intensity={0.6} color="#F5D98A" />
+      <Environment preset="city" environmentIntensity={0.8} />
 
       {/* === CHAPTER 0: Born From Stars — Gold Particles + Ring === */}
       <GoldParticles

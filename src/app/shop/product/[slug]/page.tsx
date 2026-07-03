@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getProductBySlug, formatPrice, formatEmi } from '@/lib/products';
+import { getProductImage } from '@/lib/images';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { Navbar } from '@/components/ui/Navbar';
-import { AurumCursor } from '@/components/ui/AurumCursor';
 import Link from 'next/link';
 
 const materials = [
@@ -73,7 +75,32 @@ function AccordionItem({ title, children, defaultOpen = false }: AccordionItemPr
 export default function ProductDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const product = getProductBySlug(slug);
+  
+  const [dbProduct, setDbProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProduct = async () => {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (data.success) {
+          const list = data.products || [];
+          const found = list.find((p: any) => p.slug === slug);
+          if (found) {
+            setDbProduct(found);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching product specs', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProduct();
+  }, [slug]);
+
+  const product = dbProduct || getProductBySlug(slug);
 
   const [selectedMaterial, setSelectedMaterial] = useState('yellow-gold');
   const [selectedStone, setSelectedStone] = useState('diamond');
@@ -83,6 +110,15 @@ export default function ProductDetailPage() {
   const addToCart = useCartStore((s) => s.addItem);
   const toggleWishlist = useWishlistStore((s) => s.toggleItem);
   const hasWishlistItem = useWishlistStore((s) => s.items.includes(product?.id || ''));
+
+
+  if (loading && !product) {
+    return (
+      <div className="min-h-screen bg-aurum-void flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border border-aurum-gold-dim border-t-aurum-gold animate-spin" />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -107,58 +143,72 @@ export default function ProductDetailPage() {
       material: selectedMaterial,
       stone: selectedStone,
       size: selectedSize,
-      imagePath: product.images[0] || '',
+      imagePath: product.images?.[0] || '',
       modelPath: product.modelPath,
     });
   };
 
   const collectionName = product.collection.charAt(0).toUpperCase() + product.collection.slice(1);
 
+
+
   return (
     <>
-      <AurumCursor />
       <Navbar />
 
       <main className="min-h-screen bg-aurum-void pt-20">
         <div className="max-w-[1600px] mx-auto px-6 md:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-0 min-h-[calc(100vh-5rem)]">
-            {/* LEFT — 3D Viewer Area */}
+            {/* LEFT — Product Image Gallery */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8 }}
-              className="relative bg-aurum-obsidian flex items-center justify-center min-h-[50vh] lg:min-h-full"
+              className="relative bg-aurum-obsidian flex flex-col items-center justify-center min-h-[50vh] lg:min-h-full overflow-hidden"
             >
-              {/* Placeholder with jewellery silhouette */}
-              <div className="relative">
-                <div className="w-64 h-64 rounded-full bg-aurum-gold/5 flex items-center justify-center">
-                  <svg width="120" height="120" viewBox="0 0 120 120" className="opacity-40">
-                    <circle cx="60" cy="60" r="30" fill="none" stroke="#C69B3C" strokeWidth="2" />
-                    <circle cx="60" cy="30" r="8" fill="none" stroke="#E8F0F8" strokeWidth="1.5" />
-                  </svg>
-                </div>
-                {/* Material color indicator */}
-                <div
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-1 rounded-full opacity-50 transition-colors duration-400"
-                  style={{ background: materials.find(m => m.key === selectedMaterial)?.color }}
+              {/* Ambient gold glow behind product */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: 'radial-gradient(ellipse at 50% 60%, rgba(198,155,60,0.08) 0%, transparent 65%)',
+                }}
+              />
+
+              {/* Main product image */}
+              <motion.div
+                className="relative w-[70%] max-w-[480px]"
+                style={{ aspectRatio: '1/1' }}
+                whileHover={{ scale: 1.04 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <Image
+                  src={getProductImage(product.collection, product.slug)}
+                  alt={product.name}
+                  fill
+                  className="object-contain drop-shadow-2xl"
+                  sizes="(max-width: 768px) 80vw, 40vw"
+                  priority
                 />
-              </div>
+              </motion.div>
 
-              {/* Interaction hint */}
-              <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-aurum-ivory-deep text-xs font-body tracking-label uppercase opacity-50">
-                Tap and drag to explore
-              </p>
+              {/* Subtle reflection line */}
+              <div
+                className="absolute bottom-[15%] left-1/2 -translate-x-1/2 w-[200px] h-[1px] opacity-20"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(198,155,60,0.6), transparent)',
+                }}
+              />
 
-              {/* Material selector */}
-              <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-3">
+              {/* Material color indicator */}
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3">
                 {materials.map((mat) => (
                   <button
                     key={mat.key}
                     onClick={() => setSelectedMaterial(mat.key)}
-                    className={`w-8 h-8 rounded-full border-2 transition-all duration-300 ${
+                    className={`w-7 h-7 rounded-full border-2 transition-all duration-300 ${
                       selectedMaterial === mat.key
-                        ? 'border-aurum-cream scale-110'
-                        : 'border-aurum-mist hover:border-aurum-ivory-deep'
+                        ? 'border-aurum-cream scale-110 shadow-lg'
+                        : 'border-aurum-mist/50 hover:border-aurum-ivory-deep'
                     }`}
                     style={{ background: mat.color }}
                     title={mat.label}

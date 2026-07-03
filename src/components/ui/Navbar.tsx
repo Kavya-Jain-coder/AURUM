@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '@/store/cartStore';
@@ -31,13 +32,16 @@ export function Navbar() {
     >
       <nav className="flex items-center justify-between h-16 px-6 md:px-12 max-w-[1600px] mx-auto">
         {/* Logo */}
-        <Link href="/" className="scroll-chapter-content">
-          <h1
-            className="font-display font-bold italic text-aurum-gold text-xl"
-            style={{ letterSpacing: '0.2em' }}
-          >
-            AURUM
-          </h1>
+        <Link href="/" className="scroll-chapter-content mr-8 flex items-center">
+          <div className="relative w-48 h-12 select-none pointer-events-none" style={{ transform: 'scale(3.5)', transformOrigin: 'left center' }}>
+            <Image
+              src="/images/Aurum_Logo.png"
+              alt="AURUM Logo"
+              fill
+              className="object-contain"
+              style={{ filter: 'brightness(1.3) contrast(1.1)', mixBlendMode: 'screen' }}
+            />
+          </div>
         </Link>
 
         {/* Center: Nav links (desktop) + Search */}

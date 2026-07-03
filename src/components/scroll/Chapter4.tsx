@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
+import Link from 'next/link';
 import { collections } from '@/lib/products';
 
 /**
@@ -31,31 +32,34 @@ export function Chapter4() {
         const card = cardRefs.current[i];
         if (!card) return;
 
+        // Each card gets 25% of timeline: 5% enter, 15% hold, 5% exit
         const startFraction = i * 0.25;
-        const peakFraction = startFraction + 0.05;
-        const endFraction = (i + 1) * 0.25;
-        const exitStartFraction = endFraction - 0.05;
+        const enterEnd = startFraction + 0.05;
+        const exitStart = startFraction + 0.20;
+        const exitEnd = (i + 1) * 0.25;
 
         // 1. Enter: scale from center
         masterTl.fromTo(
           card,
-          { scale: 0.8, opacity: 0 },
+          { scale: 0.8, autoAlpha: 0 },
           {
             scale: 1,
-            opacity: 1,
+            autoAlpha: 1,
             ease: 'cubic-bezier(0.16, 1, 0.3, 1)',
-            duration: peakFraction - startFraction,
+            duration: enterEnd - startFraction,
           },
           startFraction
         );
 
-        // 2. Hold on screen, then Exit: scale up and fade out
-        masterTl.to(card, {
-          scale: 1.1,
-          opacity: 0,
-          ease: 'cubic-bezier(0.7, 0, 0.84, 0)',
-          duration: endFraction - exitStartFraction,
-        }, exitStartFraction);
+        // 2. Exit: scale up and fade out (skip last card — it stays until Chapter 5)
+        if (i < collections.length - 1) {
+          masterTl.to(card, {
+            scale: 1.1,
+            autoAlpha: 0,
+            ease: 'cubic-bezier(0.7, 0, 0.84, 0)',
+            duration: exitEnd - exitStart,
+          }, exitStart);
+        }
       });
       
       // Force master timeline duration to 1
@@ -74,8 +78,8 @@ export function Chapter4() {
         <div
           key={collection.slug}
           ref={(el) => { cardRefs.current[i] = el; }}
-          className="scroll-chapter-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center opacity-0"
-          style={{ transform: 'translate(-50%, -50%) scale(0.8)' }}
+          className="scroll-chapter-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center invisible"
+          style={{ transform: 'translate(-50%, -50%) scale(0.8)', zIndex: 10 }}
         >
           {/* Collection label */}
           <span className="font-body text-aurum-ivory-deep text-xs tracking-label uppercase block mb-4">
@@ -104,9 +108,12 @@ export function Chapter4() {
           </p>
 
           {/* CTA */}
-          <button className="btn-outline-gold mt-8 text-sm px-8 py-3">
+          <Link
+            href={`/shop?collection=${collection.slug}`}
+            className="btn-outline-gold mt-8 text-sm px-8 py-3 inline-block cursor-pointer"
+          >
             View Collection →
-          </button>
+          </Link>
 
           {/* Gemstone accent line */}
           <div

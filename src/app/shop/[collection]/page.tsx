@@ -5,21 +5,44 @@ import { motion } from 'framer-motion';
 import { getCollectionBySlug, getProductsByCollection } from '@/lib/products';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { Navbar } from '@/components/ui/Navbar';
-import { AurumCursor } from '@/components/ui/AurumCursor';
+
+import { useState, useEffect } from 'react';
 
 export default function CollectionPage() {
   const params = useParams();
   const collectionSlug = params.collection as string;
   const collection = getCollectionBySlug(collectionSlug);
-  const filteredProducts = getProductsByCollection(collectionSlug);
+
+  const [dbProducts, setDbProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (data.success) {
+          setDbProducts(data.products || []);
+        }
+      } catch (err) {
+        console.error('Error loading products', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProducts();
+  }, []);
+
+  const filteredProducts = (dbProducts.length > 0 ? dbProducts : getProductsByCollection(collectionSlug))
+    .filter((p: any) => p.collection === collectionSlug);
 
   if (!collection) {
     notFound();
   }
 
+
   return (
     <>
-      <AurumCursor />
       <Navbar />
 
       <main className="min-h-screen bg-aurum-void pt-20">

@@ -30,31 +30,31 @@ export function Chapter3() {
       });
 
       panels.forEach((panel, i) => {
-        // Calculate percentages (0 to 1) for this panel's lifecycle
+        // Each panel gets 33% of timeline: 8% enter, 17% hold, 8% exit
         const startP = (i * 33) / 100;       
-        const peakP = startP + 0.15;   
-        const endP = startP + 0.30;    
+        const enterEnd = startP + 0.08;   
+        const exitStart = startP + 0.25;
+        const exitEnd = startP + 0.33;
 
         // 1. Initial state (hidden below)
         gsap.set(panel, { y: 40, opacity: 0 });
 
-        // 2. Animate IN (from startP to peakP)
+        // 2. Animate IN
         masterTl.to(panel, {
           y: 0,
           opacity: 1,
           ease: 'power2.out',
-          duration: peakP - startP,
+          duration: enterEnd - startP,
         }, startP);
 
-        // 3. Animate OUT (from peakP to endP)
-        // Panel 3 shatters out separately, so only fade out panels 0 and 1
+        // 3. Animate OUT — Panel C shatters out separately
         if (i < 2) {
           masterTl.to(panel, {
             y: -40,
             opacity: 0,
             ease: 'power2.in',
-            duration: endP - peakP,
-          }, peakP);
+            duration: exitEnd - exitStart,
+          }, exitStart);
         }
       });
 

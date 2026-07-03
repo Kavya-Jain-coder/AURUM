@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
 import { formatPrice } from '@/lib/products';
 import { Navbar } from '@/components/ui/Navbar';
-import { AurumCursor } from '@/components/ui/AurumCursor';
 
 export default function CartPage() {
   const items = useCartStore((s) => s.items);
@@ -21,7 +20,6 @@ export default function CartPage() {
 
   return (
     <>
-      <AurumCursor />
       <Navbar />
 
       <main className="min-h-screen bg-aurum-void pt-20 pb-20">

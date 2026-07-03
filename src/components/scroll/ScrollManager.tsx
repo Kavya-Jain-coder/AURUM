@@ -13,6 +13,7 @@ export function ScrollManager() {
   const setScrollProgress = useUiStore((s) => s.setScrollProgress);
   const setActiveChapter = useUiStore((s) => s.setActiveChapter);
   const setChapterProgress = useUiStore((s) => s.setChapterProgress);
+  const prevProgress = useRef(0);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -32,6 +33,11 @@ export function ScrollManager() {
       scrub: 0.5,
       onUpdate: (self) => {
         const progress = self.progress;
+
+        // Throttle: skip updates where progress barely changed
+        if (Math.abs(progress - prevProgress.current) < 0.001) return;
+        prevProgress.current = progress;
+
         setScrollProgress(progress);
 
         // Determine active chapter based on thresholds

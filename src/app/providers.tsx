@@ -5,6 +5,7 @@ import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useUiStore } from '@/store/uiStore';
+import { SessionProvider } from 'next-auth/react';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -22,7 +23,7 @@ export function Providers({ children }: ProvidersProps) {
 
     // Initialize Lenis smooth scroll
     const lenis = new Lenis({
-      lerp: 0.08,
+      lerp: 0.1,
       smoothWheel: true,
       wheelMultiplier: 1,
       touchMultiplier: 2,
@@ -43,5 +44,5 @@ export function Providers({ children }: ProvidersProps) {
     };
   }, [setIsMobile]);
 
-  return <>{children}</>;
+  return <SessionProvider>{children}</SessionProvider>;
 }

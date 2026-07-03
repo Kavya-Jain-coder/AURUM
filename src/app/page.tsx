@@ -8,7 +8,6 @@ import { Chapter4 } from '@/components/scroll/Chapter4';
 import { Chapter5 } from '@/components/scroll/Chapter5';
 import { ScrollManager } from '@/components/scroll/ScrollManager';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import { AurumCursor } from '@/components/ui/AurumCursor';
 import { Navbar } from '@/components/ui/Navbar';
 
 // Dynamic import for Three.js canvas — avoid SSR
@@ -23,22 +22,19 @@ export default function HomePage() {
       {/* Loading screen */}
       <LoadingScreen />
 
-      {/* Custom cursor */}
-      <AurumCursor />
-
       {/* Navbar (appears at Chapter 5 / shop pages) */}
       <Navbar />
 
-      {/* Fixed Three.js canvas (z-index: 0) — FIX 2 */}
+      {/* Fixed Three.js canvas (z-index: 0) */}
       <AurumCanvas />
 
-      {/* Scroll chapters (z-index: 1, transparent backgrounds) — FIX 2 */}
+      {/* Scroll chapters (z-index: 1, transparent backgrounds) */}
       <main
         style={{
           position: 'relative',
           zIndex: 1,
           height: '1000vh',
-          overflow: 'visible', // FIX 2: never overflow: hidden
+          overflow: 'visible',
         }}
       >
         {/* Invisible scroll tracker */}

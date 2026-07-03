@@ -99,7 +99,7 @@ export function Chapter1() {
           </div>
           <div className="overflow-hidden">
             <h1
-              className="hero-line-inner font-display font-bold italic text-aurum-gold leading-none"
+              className="hero-line-inner font-display font-bold italic text-gold-gradient leading-none"
               style={{ fontSize: 'clamp(2.5rem, 7vw, 5.5rem)', letterSpacing: '-0.02em', paddingBottom: '0.1em' }}
             >
               was forged in a dying star.
@@ -107,7 +107,7 @@ export function Chapter1() {
           </div>
         </div>
 
-        <div ref={subtextRef} className="mt-8 opacity-0">
+        <div ref={subtextRef} className="mt-12 opacity-0">
           <p className="font-body text-aurum-ivory-mid text-lg leading-relaxed max-w-md">
             4.6 billion years ago. A supernova explosion scattered it across the cosmos.
           </p>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -33,10 +34,10 @@ export function Chapter5() {
       // 1. Poem text staggers in (0% to 20%)
       masterTl.fromTo(
         poemLines,
-        { y: 20, opacity: 0 },
+        { y: 20, autoAlpha: 0 },
         {
           y: 0,
-          opacity: 1,
+          autoAlpha: 1,
           duration: 0.2, // 20% of the timeline
           stagger: 0.05,
           ease: 'power2.out',
@@ -47,9 +48,9 @@ export function Chapter5() {
       // 2. Text split animation (40% to 60%)
       poemLines.forEach((line, index) => {
         masterTl.to(line, {
-          clipPath: 'polygon(0 0, 100% 0, 100% 0%, 0 0%)',
+          clipPath: 'polygon(0 0%, 100% 0%, 100% 100%, 0 100%)',
+          autoAlpha: 0,
           y: -60,
-          opacity: 0,
           ease: 'power2.in',
           duration: 0.2, // 20% of the timeline
         }, 0.4 + (index * 0.05));
@@ -58,10 +59,10 @@ export function Chapter5() {
       // 3. CTA section fades in (70% to 90%)
       masterTl.fromTo(
         ctaRef.current!,
-        { scale: 0.9, opacity: 0 },
+        { scale: 0.9, autoAlpha: 0 },
         {
           scale: 1,
-          opacity: 1,
+          autoAlpha: 1,
           duration: 0.2, // 20% of the timeline
           ease: 'power3.out',
         },
@@ -90,19 +91,19 @@ export function Chapter5() {
         className="scroll-chapter-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center"
       >
         <p
-          className="poem-line font-display italic text-aurum-ivory leading-snug opacity-0"
+          className="poem-line font-display italic text-aurum-ivory leading-snug invisible"
           style={{ fontSize: 'clamp(1.5rem, 3.5vw, 2.5rem)' }}
         >
           You have been searching for something
         </p>
         <p
-          className="poem-line font-display italic text-aurum-ivory leading-snug mt-3 opacity-0"
+          className="poem-line font-display italic text-aurum-ivory leading-snug mt-3 invisible"
           style={{ fontSize: 'clamp(1.5rem, 3.5vw, 2.5rem)' }}
         >
           you couldn&apos;t name.
         </p>
         <p
-          className="poem-line font-display font-bold italic text-aurum-gold leading-snug mt-6 opacity-0"
+          className="poem-line font-display font-bold italic text-aurum-gold leading-snug mt-6 invisible"
           style={{ fontSize: 'clamp(1.8rem, 4vw, 3rem)' }}
         >
           We made it for you.
@@ -112,30 +113,18 @@ export function Chapter5() {
       {/* CTA section */}
       <div
         ref={ctaRef}
-        className="scroll-chapter-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center opacity-0"
+        className="scroll-chapter-content fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center invisible"
       >
-        {/* AURUM Logo SVG */}
-        <svg
-          viewBox="0 0 200 40"
-          className="mx-auto mb-6 w-48"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <text
-            x="50%"
-            y="50%"
-            dominantBaseline="central"
-            textAnchor="middle"
-            fill="#C69B3C"
-            fontFamily="Cormorant Garamond, serif"
-            fontWeight="700"
-            fontStyle="italic"
-            fontSize="36"
-            letterSpacing="8"
-          >
-            AURUM
-          </text>
-        </svg>
+        {/* AURUM Logo */}
+        <div className="relative w-80 h-24 mx-auto mb-6">
+          <Image
+            src="/images/Aurum_Logo.png"
+            alt="AURUM"
+            fill
+            className="object-contain"
+            style={{ filter: 'brightness(1.3) contrast(1.1)', mixBlendMode: 'screen', transform: 'scale(3.5)' }}
+          />
+        </div>
 
         <p className="font-body text-aurum-ivory-mid text-base mb-8 tracking-comfortable">
           87 pieces. Each one named. Each one yours.

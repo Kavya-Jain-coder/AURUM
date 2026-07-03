@@ -59,17 +59,6 @@ body {
   font-family: var(--font-body);
   letter-spacing: 0.01em;
   overflow-x: hidden;
-  /* Hide default cursor globally — custom cursor replaces it */
-}
-
-/* Custom cursor — hide on touch devices */
-@media (pointer: fine) {
-  body {
-    cursor: none;
-  }
-  a, button, [role="button"], input, select, textarea {
-    cursor: none;
-  }
 }
 
 /* ============================================
@@ -195,7 +184,7 @@ body {
 
 .btn-gold:hover {
   background: var(--aurum-gold-glow);
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.02);
   box-shadow: 0 8px 30px rgba(198, 155, 60, 0.3);
 }
 
@@ -338,11 +327,22 @@ body {
 }
 
 /* Disable custom cursor on touch devices */
-@media (pointer: coarse) {
-  body {
-    cursor: auto !important;
-  }
-  a, button, [role="button"], input, select, textarea {
-    cursor: auto !important;
-  }
+
+/* ============================================
+   TEXT UTILITIES
+   ============================================ */
+.text-balance {
+  text-wrap: balance;
+}
+
+/* ============================================
+   HIDE SCROLLBAR UTILITY
+   ============================================ */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

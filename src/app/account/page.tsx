@@ -6,7 +6,6 @@ import { useWishlistStore } from '@/store/wishlistStore';
 import { products, formatPrice } from '@/lib/products';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { Navbar } from '@/components/ui/Navbar';
-import { AurumCursor } from '@/components/ui/AurumCursor';
 
 type Tab = 'profile' | 'orders' | 'wishlist';
 
@@ -31,7 +30,6 @@ export default function AccountPage() {
 
   return (
     <>
-      <AurumCursor />
       <Navbar />
 
       <main className="min-h-screen bg-aurum-void pt-20 pb-20">
