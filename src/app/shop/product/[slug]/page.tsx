@@ -77,6 +77,7 @@ export default function ProductDetailPage() {
   const slug = params.slug as string;
   
   const [dbProduct, setDbProduct] = useState<any>(null);
+  const [marketRates, setMarketRates] = useState<any>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -89,6 +90,7 @@ export default function ProductDetailPage() {
           const found = list.find((p: any) => p.slug === slug);
           if (found) {
             setDbProduct(found);
+            setMarketRates(data.rates || {});
           }
         }
       } catch (err) {
@@ -103,13 +105,53 @@ export default function ProductDetailPage() {
   const product = dbProduct || getProductBySlug(slug);
 
   const [selectedMaterial, setSelectedMaterial] = useState('yellow-gold');
-  const [selectedStone, setSelectedStone] = useState('diamond');
+  
+  const variantOptions = (product?.gemstoneVariants && product.gemstoneVariants.length > 0)
+    ? product.gemstoneVariants
+    : [
+        { 
+          type: product?.gemstoneType || 'Diamond VS-GH', 
+          color: '#E8F0F8', 
+          imagePath: product?.images?.[0] || '', 
+          baseCarat: parseFloat(product?.gemstoneCarat || '0.5')
+        }
+      ];
+  
+  const [selectedVariantType, setSelectedVariantType] = useState(variantOptions[0]?.type || 'Diamond VS-GH');
   const [selectedSize, setSelectedSize] = useState('7');
   const [quantity, setQuantity] = useState(1);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
 
   const addToCart = useCartStore((s) => s.addItem);
   const toggleWishlist = useWishlistStore((s) => s.toggleItem);
   const hasWishlistItem = useWishlistStore((s) => s.items.includes(product?.id || ''));
+
+  // Determine current variant based on selection
+  const currentVariant = variantOptions.find((v: any) => v.type === selectedVariantType) || variantOptions[0];
+
+  // Calculate live dynamic price
+  let displayPrice = product?.price || 0;
+  if (product && marketRates && Object.keys(marketRates).length > 0) {
+    const size = parseInt(selectedSize, 10) || 7;
+    const baseSize = product.baseSize || 7;
+    
+    // Size multiplier: 5% change per size step
+    const sizeMultiplier = 1 + ((size - baseSize) * 0.05);
+
+    const metalRate = marketRates[product.metalType] || 0;
+    const metalWeight = parseFloat(product.metalWeightGrams || '0') * sizeMultiplier;
+    
+    const stoneRate = marketRates[currentVariant.type] || 0;
+    const stoneCarat = parseFloat(currentVariant.baseCarat?.toString() || '0') * sizeMultiplier;
+
+    const makingCharges = product.makingCharges || 0;
+    
+    const livePaise = (metalWeight * metalRate) + (stoneCarat * stoneRate) + makingCharges;
+    displayPrice = isNaN(livePaise) ? (product?.price || 0) : Math.round(livePaise * 1.03); // add 3% GST
+  }
+
+  // Display image dynamically based on selected stone
+  const currentImage = currentVariant?.imagePath || getProductImage(product?.collection || '', product?.slug || '');
 
 
   if (loading && !product) {
@@ -138,12 +180,12 @@ export default function ProductDetailPage() {
       productId: product.id,
       name: product.name,
       slug: product.slug,
-      price: product.price,
+      price: displayPrice,
       quantity,
       material: selectedMaterial,
-      stone: selectedStone,
+      stone: selectedVariantType,
       size: selectedSize,
-      imagePath: product.images?.[0] || '',
+      imagePath: currentImage,
       modelPath: product.modelPath,
     });
   };
@@ -182,7 +224,7 @@ export default function ProductDetailPage() {
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               >
                 <Image
-                  src={getProductImage(product.collection, product.slug)}
+                  src={currentImage}
                   alt={product.name}
                   fill
                   className="object-contain drop-shadow-2xl"
@@ -243,11 +285,18 @@ export default function ProductDetailPage() {
 
               {/* Price */}
               <div className="mt-4">
-                <span className="font-accent text-aurum-gold text-2xl font-bold">
-                  {formatPrice(product.price)}
-                </span>
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={displayPrice}
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="font-accent text-aurum-gold text-2xl font-bold inline-block"
+                  >
+                    {formatPrice(displayPrice)}
+                  </motion.span>
+                </AnimatePresence>
                 <p className="font-body text-aurum-ivory-deep text-sm mt-1">
-                  Or {formatEmi(product.price)} with no-cost EMI →
+                  Or {formatEmi(displayPrice)} with no-cost EMI →
                 </p>
               </div>
 
@@ -266,26 +315,29 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Stone selector */}
-              <div className="mt-8">
-                <label className="font-body text-aurum-ivory-mid text-xs tracking-label uppercase block mb-3">
-                  Stone
-                </label>
-                <div className="flex gap-2">
-                  {stones.map((stone) => (
-                    <button
-                      key={stone.key}
-                      onClick={() => setSelectedStone(stone.key)}
-                      className={`px-4 py-2 text-xs font-body tracking-comfortable rounded border transition-all duration-300 ${
-                        selectedStone === stone.key
-                          ? 'border-aurum-gold text-aurum-gold bg-aurum-gold/5'
-                          : 'border-aurum-mist text-aurum-ivory-deep hover:border-aurum-gold-dim'
-                      }`}
-                    >
-                      {stone.label}
-                    </button>
-                  ))}
+              {variantOptions.length > 1 && (
+                <div className="mt-8">
+                  <label className="font-body text-aurum-ivory-mid text-xs tracking-label uppercase block mb-3">
+                    Stone
+                  </label>
+                  <div className="flex gap-2 flex-wrap">
+                    {variantOptions.map((variant: any) => (
+                      <button
+                        key={variant.type}
+                        onClick={() => setSelectedVariantType(variant.type)}
+                        className={`px-4 py-2 text-xs font-body tracking-comfortable rounded border transition-all duration-300 flex items-center gap-2 ${
+                          selectedVariantType === variant.type
+                            ? 'border-aurum-gold text-aurum-gold bg-aurum-gold/5'
+                            : 'border-aurum-mist text-aurum-ivory-deep hover:border-aurum-gold-dim'
+                        }`}
+                      >
+                        <span className="w-2 h-2 rounded-full" style={{ background: variant.color }}></span>
+                        {variant.type}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Size selector */}
               {product.collection === 'rings' && (
@@ -294,7 +346,10 @@ export default function ProductDetailPage() {
                     <label className="font-body text-aurum-ivory-mid text-xs tracking-label uppercase">
                       Size
                     </label>
-                    <button className="font-body text-aurum-gold-dim text-xs hover:text-aurum-gold transition-colors">
+                    <button 
+                      onClick={() => setShowSizeGuide(true)}
+                      className="font-body text-aurum-gold-dim text-xs hover:text-aurum-gold transition-colors"
+                    >
                       Size guide →
                     </button>
                   </div>
@@ -385,6 +440,91 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </main>
+
+      {/* Size Guide Modal */}
+      <AnimatePresence>
+        {showSizeGuide && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-aurum-void/90 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-aurum-obsidian border border-aurum-mist/30 w-full max-w-lg p-8 relative shadow-2xl"
+            >
+              <button
+                onClick={() => setShowSizeGuide(false)}
+                className="absolute top-4 right-4 text-aurum-ivory-mid hover:text-aurum-ivory text-xl"
+              >
+                ×
+              </button>
+              
+              <h2 className="font-display text-aurum-ivory text-2xl italic mb-6">Ring Size Guide</h2>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-left font-body text-sm text-aurum-ivory-mid">
+                  <thead>
+                    <tr className="border-b border-aurum-mist/30 text-aurum-ivory-deep">
+                      <th className="pb-3 font-normal">US Size</th>
+                      <th className="pb-3 font-normal">Indian Size</th>
+                      <th className="pb-3 font-normal">Diameter (mm)</th>
+                      <th className="pb-3 font-normal">Circumference (mm)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-aurum-mist/10">
+                      <td className="py-3">5</td>
+                      <td className="py-3">9</td>
+                      <td className="py-3">15.7</td>
+                      <td className="py-3">49.3</td>
+                    </tr>
+                    <tr className="border-b border-aurum-mist/10">
+                      <td className="py-3">6</td>
+                      <td className="py-3">12</td>
+                      <td className="py-3">16.5</td>
+                      <td className="py-3">51.9</td>
+                    </tr>
+                    <tr className="border-b border-aurum-mist/10 bg-aurum-gold/5">
+                      <td className="py-3 text-aurum-gold">7 (Base)</td>
+                      <td className="py-3">14</td>
+                      <td className="py-3">17.3</td>
+                      <td className="py-3">54.4</td>
+                    </tr>
+                    <tr className="border-b border-aurum-mist/10">
+                      <td className="py-3">8</td>
+                      <td className="py-3">17</td>
+                      <td className="py-3">18.1</td>
+                      <td className="py-3">57.0</td>
+                    </tr>
+                    <tr className="border-b border-aurum-mist/10">
+                      <td className="py-3">9</td>
+                      <td className="py-3">19</td>
+                      <td className="py-3">18.9</td>
+                      <td className="py-3">59.5</td>
+                    </tr>
+                    <tr>
+                      <td className="py-3">10</td>
+                      <td className="py-3">22</td>
+                      <td className="py-3">19.8</td>
+                      <td className="py-3">62.1</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <div className="mt-8 pt-6 border-t border-aurum-mist/30">
+                <p className="text-xs text-aurum-ivory-deep font-body leading-relaxed">
+                  For the most accurate fit, we recommend visiting a local jeweller. Since each AURUM piece is handcrafted, selecting a size larger than our base size (7) proportionally increases the precious metal weight and gemstone carats used, which is reflected in the live price.
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

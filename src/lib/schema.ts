@@ -13,6 +13,8 @@ import {
   serial,
   varchar,
   boolean,
+  decimal,
+  json,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -22,21 +24,42 @@ export const productsTable = pgTable('products', {
   name: text('name').notNull(),
   slug: text('slug').unique().notNull(),
   collection: varchar('collection', { length: 50 }).notNull(), // rings, necklaces, bracelets, earrings
-  price: integer('price').notNull(), // in paise
+  
+  // Compositional Pricing Fields
+  metalType: varchar('metal_type', { length: 50 }).notNull(), // e.g. 22K Gold, 18K Gold, Platinum 950
+  metalWeightGrams: decimal('metal_weight_grams', { precision: 10, scale: 3 }).notNull(),
+  gemstoneType: varchar('gemstone_type', { length: 50 }), // e.g. Diamond VVS-EF, None
+  gemstoneCarat: decimal('gemstone_carat', { precision: 10, scale: 3 }),
+  gemstoneVariants: json('gemstone_variants'), // array of { type, baseCarat, imagePath, color }
+  makingCharges: integer('making_charges').default(0).notNull(), // in paise
+  baseSize: integer('base_size').default(7), // the size that corresponds to the base metalWeight and gemstoneCarat
+
   description: text('description'),
   story: text('story'),
   imagePath: text('image_path'),
   modelPath: text('model_path'),
+  
+  // Display string properties (optional now that we have real data, but good for UI text)
   materialsMetal: text('materials_metal'),
   materialsStone: text('materials_stone'),
   materialsWeight: text('materials_weight'),
   materialsPurity: text('materials_purity'),
+  
   inStock: boolean('in_stock').default(true).notNull(),
   rating: integer('rating').default(5).notNull(),
   reviewCount: integer('review_count').default(0).notNull(),
   isNew: boolean('is_new').default(false).notNull(),
   isBestseller: boolean('is_bestseller').default(false).notNull(),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+});
+
+// ─── Market Rates ─────────────────────────────────────────────────────────
+export const marketRates = pgTable('market_rates', {
+  id: serial('id').primaryKey(),
+  materialType: varchar('material_type', { length: 50 }).notNull(), // 'metal' or 'gemstone'
+  materialName: varchar('material_name', { length: 100 }).notNull(), // '22K Gold', 'Diamond VVS-EF'
+  ratePerUnit: integer('rate_per_unit').notNull(), // in paise (per gram for metal, per carat for gemstone)
+  effectiveDate: timestamp('effective_date', { mode: 'date' }).defaultNow().notNull(),
 });
 
 // ─── Users ────────────────────────────────────────────────────────────────

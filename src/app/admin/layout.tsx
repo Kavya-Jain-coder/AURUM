@@ -77,6 +77,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             Add New Product
           </Link>
           <Link
+            href="/admin/rates"
+            className="flex items-center gap-3 px-3 py-2.5 text-xs font-body tracking-[0.1em] uppercase text-aurum-ivory-mid hover:bg-aurum-gold/5 hover:text-aurum-gold transition-all duration-300"
+          >
+            Today's Rates
+          </Link>
+          <Link
             href="/shop"
             className="flex items-center gap-3 px-3 py-2.5 text-xs font-body tracking-[0.1em] uppercase text-aurum-ivory-mid hover:bg-aurum-gold/5 hover:text-aurum-gold transition-all duration-300"
           >

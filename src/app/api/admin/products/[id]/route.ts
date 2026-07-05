@@ -50,7 +50,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       name,
       slug,
       collection,
-      price,
+      metalType,
+      metalWeightGrams,
+      gemstoneType,
+      gemstoneCarat,
+      makingCharges,
       description,
       story,
       imagePath,
@@ -61,13 +65,20 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       inStock,
       isNew,
       isBestseller,
+      gemstoneVariants,
     } = body;
 
     const updatedData: any = {};
     if (name !== undefined) updatedData.name = name;
     if (slug !== undefined) updatedData.slug = slug.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
     if (collection !== undefined) updatedData.collection = collection;
-    if (price !== undefined) updatedData.price = Math.round(Number(price));
+    
+    if (metalType !== undefined) updatedData.metalType = metalType;
+    if (metalWeightGrams !== undefined) updatedData.metalWeightGrams = metalWeightGrams.toString();
+    if (gemstoneType !== undefined) updatedData.gemstoneType = gemstoneType;
+    if (gemstoneCarat !== undefined) updatedData.gemstoneCarat = gemstoneCarat ? gemstoneCarat.toString() : null;
+    if (makingCharges !== undefined) updatedData.makingCharges = makingCharges;
+    
     if (description !== undefined) updatedData.description = description;
     if (story !== undefined) updatedData.story = story;
     if (imagePath !== undefined) updatedData.imagePath = imagePath;
@@ -78,6 +89,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     if (inStock !== undefined) updatedData.inStock = !!inStock;
     if (isNew !== undefined) updatedData.isNew = !!isNew;
     if (isBestseller !== undefined) updatedData.isBestseller = !!isBestseller;
+    if (gemstoneVariants !== undefined) updatedData.gemstoneVariants = gemstoneVariants;
 
     await db.update(productsTable).set(updatedData).where(eq(productsTable.id, id));
 

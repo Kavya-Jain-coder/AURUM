@@ -16,7 +16,11 @@ export default function NewProductPage() {
     name: '',
     slug: '',
     collection: 'rings',
-    price: '', // in Rupees (will convert to paise on submission)
+    metalType: '22K Gold',
+    metalWeightGrams: '',
+    gemstoneType: 'None',
+    gemstoneCarat: '',
+    makingCharges: '',
     description: '',
     story: '',
     materialsMetal: 'Yellow Gold',
@@ -59,7 +63,7 @@ export default function NewProductPage() {
 
       const data = await res.json();
       if (data.success) {
-        setForm({ ...form, imagePath: data.path });
+        setForm({ ...form, imagePath: data.url });
       } else {
         setError(data.error || 'Failed to upload image');
       }
@@ -89,8 +93,8 @@ export default function NewProductPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.slug || !form.price) {
-      setError('Please fill in all required fields.');
+    if (!form.name || !form.slug || !form.metalWeightGrams || !form.makingCharges) {
+      setError('Please fill in all required fields (Name, Slug, Metal Weight, Making Charges).');
       return;
     }
 
@@ -98,15 +102,18 @@ export default function NewProductPage() {
     setError('');
 
     try {
-      const priceInPaise = Math.round(parseFloat(form.price) * 100);
-      
+      const payload = {
+        ...form,
+        metalWeightGrams: parseFloat(form.metalWeightGrams),
+        gemstoneCarat: form.gemstoneCarat ? parseFloat(form.gemstoneCarat) : null,
+        gemstoneType: form.gemstoneType === 'None' ? null : form.gemstoneType,
+        makingCharges: Math.round(parseFloat(form.makingCharges) * 100),
+      };
+
       const res = await fetch('/api/admin/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          price: priceInPaise,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -229,18 +236,81 @@ export default function NewProductPage() {
               <option value="earrings">Earrings</option>
             </select>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div>
+            <label className="font-body text-aurum-ivory-deep text-[10px] tracking-[0.2em] uppercase block mb-2">
+              Metal Type *
+            </label>
+            <select
+              value={form.metalType}
+              onChange={(e) => setForm({ ...form, metalType: e.target.value })}
+              className="w-full bg-aurum-obsidian border border-aurum-mist/80 text-aurum-ivory font-body text-sm px-4 py-3.5 outline-none focus:border-aurum-gold transition-colors duration-300"
+            >
+              <option value="22K Gold">22K Gold</option>
+              <option value="18K Gold">18K Gold</option>
+              <option value="Silver 925">Silver 925</option>
+              <option value="Platinum 950">Platinum 950</option>
+            </select>
+          </div>
 
           <div>
             <label className="font-body text-aurum-ivory-deep text-[10px] tracking-[0.2em] uppercase block mb-2">
-              Price (INR) *
+              Metal Weight (grams) *
             </label>
             <input
               type="number"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
+              step="0.01"
+              value={form.metalWeightGrams}
+              onChange={(e) => setForm({ ...form, metalWeightGrams: e.target.value })}
               className="w-full bg-aurum-obsidian border border-aurum-mist/80 text-aurum-ivory font-body text-sm px-4 py-3 outline-none focus:border-aurum-gold transition-colors duration-300"
-              placeholder="e.g. 145000"
+              placeholder="e.g. 10.5"
               required
+            />
+          </div>
+
+          <div>
+            <label className="font-body text-aurum-ivory-deep text-[10px] tracking-[0.2em] uppercase block mb-2">
+              Making Charges (INR) *
+            </label>
+            <input
+              type="number"
+              value={form.makingCharges}
+              onChange={(e) => setForm({ ...form, makingCharges: e.target.value })}
+              className="w-full bg-aurum-obsidian border border-aurum-mist/80 text-aurum-ivory font-body text-sm px-4 py-3 outline-none focus:border-aurum-gold transition-colors duration-300"
+              placeholder="e.g. 15000"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="font-body text-aurum-ivory-deep text-[10px] tracking-[0.2em] uppercase block mb-2">
+              Gemstone Type
+            </label>
+            <select
+              value={form.gemstoneType}
+              onChange={(e) => setForm({ ...form, gemstoneType: e.target.value })}
+              className="w-full bg-aurum-obsidian border border-aurum-mist/80 text-aurum-ivory font-body text-sm px-4 py-3.5 outline-none focus:border-aurum-gold transition-colors duration-300"
+            >
+              <option value="None">None</option>
+              <option value="Diamond VVS-EF">Diamond VVS-EF</option>
+              <option value="Diamond VS-GH">Diamond VS-GH</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="font-body text-aurum-ivory-deep text-[10px] tracking-[0.2em] uppercase block mb-2">
+              Gemstone Carat
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              value={form.gemstoneCarat}
+              onChange={(e) => setForm({ ...form, gemstoneCarat: e.target.value })}
+              className="w-full bg-aurum-obsidian border border-aurum-mist/80 text-aurum-ivory font-body text-sm px-4 py-3 outline-none focus:border-aurum-gold transition-colors duration-300"
+              placeholder="e.g. 1.2"
+              disabled={form.gemstoneType === 'None'}
             />
           </div>
         </div>

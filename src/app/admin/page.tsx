@@ -12,6 +12,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Fetch products
   const fetchProducts = async () => {
@@ -53,6 +54,49 @@ export default function AdminPage() {
       }
     } catch (err) {
       setError('Error connecting to deletion endpoint');
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedIds.size} selected pieces?`)) return;
+
+    try {
+      const res = await fetch('/api/admin/products/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: Array.from(selectedIds) })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setSuccess(`Successfully deleted ${data.count} pieces`);
+        setSelectedIds(new Set());
+        fetchProducts();
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(data.error || 'Failed to bulk delete products');
+      }
+    } catch (err) {
+      setError('Error connecting to bulk deletion endpoint');
+    }
+  };
+
+  const toggleSelection = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.size === products.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(products.map(p => p.id)));
     }
   };
 
@@ -133,12 +177,22 @@ export default function AdminPage() {
               Add, modify or archive fine jewellery pieces.
             </p>
           </div>
-          <Link
-            href="/admin/products/new"
-            className="btn-outline-gold text-[10px] px-6 py-2.5 font-body tracking-[0.15em]"
-          >
-            Add Piece +
-          </Link>
+          <div className="flex items-center gap-4">
+            {selectedIds.size > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="btn-outline-gold !border-aurum-ruby/50 text-aurum-ruby hover:!border-aurum-ruby hover:!bg-aurum-ruby/10 text-[10px] px-6 py-2.5 font-body tracking-[0.15em]"
+              >
+                Delete Selected ({selectedIds.size})
+              </button>
+            )}
+            <Link
+              href="/admin/products/new"
+              className="btn-outline-gold text-[10px] px-6 py-2.5 font-body tracking-[0.15em]"
+            >
+              Add Piece +
+            </Link>
+          </div>
         </div>
 
         {loading ? (
@@ -155,6 +209,14 @@ export default function AdminPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-aurum-mist/80 text-[10px] font-body tracking-[0.15em] uppercase text-aurum-ivory-deep">
+                  <th className="py-4 font-medium w-10">
+                    <input
+                      type="checkbox"
+                      checked={products.length > 0 && selectedIds.size === products.length}
+                      onChange={toggleAll}
+                      className="accent-aurum-gold cursor-pointer"
+                    />
+                  </th>
                   <th className="py-4 font-medium">Piece</th>
                   <th className="py-4 font-medium">Collection</th>
                   <th className="py-4 font-medium">Price</th>
@@ -164,9 +226,17 @@ export default function AdminPage() {
               </thead>
               <tbody className="divide-y divide-aurum-mist/30">
                 {products.map((p) => {
-                  const clientImage = getProductImage(p.collection);
+                  const clientImage = (p.images && p.images.length > 0) ? p.images[0] : getProductImage(p.collection);
                   return (
-                    <tr key={p.id} className="text-sm hover:bg-aurum-shadow/40 transition-colors">
+                    <tr key={p.id} className={`text-sm transition-colors ${selectedIds.has(p.id) ? 'bg-aurum-gold/10 hover:bg-aurum-gold/20' : 'hover:bg-aurum-shadow/40'}`}>
+                      <td className="py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(p.id)}
+                          onChange={() => toggleSelection(p.id)}
+                          className="accent-aurum-gold cursor-pointer"
+                        />
+                      </td>
                       <td className="py-4 pr-4">
                         <div className="flex items-center gap-4">
                           <div className="relative w-12 h-16 bg-aurum-obsidian flex items-center justify-center overflow-hidden shrink-0 border border-aurum-mist/20">

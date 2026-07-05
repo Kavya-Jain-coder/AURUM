@@ -14,7 +14,7 @@ const databaseUrl = rawUrl && !rawUrl.includes('your-neon-host.neon.tech') ? raw
 
 // Create a neon SQL function — this is the HTTP-based query client
 const sql = databaseUrl
-  ? neon(databaseUrl)
+  ? neon(databaseUrl, { fetchOptions: { cache: 'no-store' } })
   : null;
 
 // Create Drizzle ORM instance

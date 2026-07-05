@@ -24,7 +24,11 @@ export async function POST(req: Request) {
       name,
       slug,
       collection,
-      price,
+      metalType,
+      metalWeightGrams,
+      gemstoneType,
+      gemstoneCarat,
+      makingCharges,
       description,
       story,
       imagePath,
@@ -35,31 +39,34 @@ export async function POST(req: Request) {
       inStock,
       isNew,
       isBestseller,
+      modelPath,
     } = body;
 
-    if (!name || !slug || !collection || !price) {
+    if (!name || !slug || !collection) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
     const newProduct = {
-      id: `${collection}-${Date.now()}`,
+      id: Math.random().toString(36).substring(2, 15),
       name,
-      slug: slug.toLowerCase().replace(/[^a-z0-9-_]/g, '-'),
+      slug,
       collection,
-      price: Math.round(Number(price)),
+      metalType,
+      metalWeightGrams: metalWeightGrams.toString(),
+      gemstoneType,
+      gemstoneCarat: gemstoneCarat ? gemstoneCarat.toString() : null,
+      makingCharges,
       description: description || '',
       story: story || '',
-      imagePath: imagePath || '/images/ring-hero.png', // fallback
-      modelPath: collection === 'rings' ? '/models/ring-solitaire.glb' : '/models/earrings-studs.glb', // default placeholders
-      materialsMetal: materialsMetal || 'Yellow Gold',
-      materialsStone: materialsStone || 'Diamond',
-      materialsWeight: materialsWeight || '4.5g',
-      materialsPurity: materialsPurity || '18 Karat',
-      inStock: inStock !== false,
-      rating: 5,
-      reviewCount: 0,
-      isNew: !!isNew,
-      isBestseller: !!isBestseller,
+      imagePath: imagePath || '/images/ring-hero.png',
+      modelPath: modelPath || '/models/ring.glb',
+      materialsMetal: materialsMetal || metalType,
+      materialsStone: materialsStone || gemstoneType || 'None',
+      materialsWeight: materialsWeight || `${metalWeightGrams}g`,
+      materialsPurity: materialsPurity || metalType.split(' ')[0],
+      inStock: inStock ?? true,
+      isNew: isNew ?? true,
+      isBestseller: isBestseller ?? false,
     };
 
     await db.insert(productsTable).values(newProduct);

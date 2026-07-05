@@ -19,6 +19,13 @@ export interface Product {
   reviewCount: number;
   isNew: boolean;
   isBestseller: boolean;
+  metalType?: string;
+  metalWeightGrams?: string;
+  gemstoneType?: string;
+  gemstoneCarat?: string;
+  makingCharges?: number;
+  gemstoneVariants?: any[];
+  baseSize?: number;
 }
 
 export interface Collection {

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
 import { auth } from '@/lib/auth';
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
 
 export async function POST(req: Request) {
   try {
@@ -14,9 +14,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 2. Parse request form data
-    const data = await req.formData();
-    const file: File | null = data.get('file') as unknown as File;
+    const formData = await req.formData();
+    const file = formData.get('file') as File | null;
 
     if (!file) {
       return NextResponse.json({ success: false, error: 'No file uploaded' }, { status: 400 });
@@ -25,18 +24,27 @@ export async function POST(req: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Ensure safe filename (remove spaces, etc)
-    const originalName = file.name || 'uploaded_image.png';
-    const safeFilename = `${Date.now()}-${originalName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    // Create unique filename
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const extension = path.extname(file.name);
+    const filename = `variant-${uniqueSuffix}${extension}`;
 
-    // Save to public/uploads directory
-    const path = join(process.cwd(), 'public', 'uploads', safeFilename);
-    await writeFile(path, buffer);
-    
-    // Return the relative URL path for the frontend
-    return NextResponse.json({ success: true, path: `/uploads/${safeFilename}` });
-  } catch (error) {
+    // Ensure uploads directory exists
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    try {
+      await mkdir(uploadsDir, { recursive: true });
+    } catch (e) {
+      // Ignore if exists
+    }
+
+    const filepath = path.join(uploadsDir, filename);
+    await writeFile(filepath, buffer);
+
+    const publicUrl = `/uploads/${filename}`;
+
+    return NextResponse.json({ success: true, url: publicUrl });
+  } catch (error: any) {
     console.error('Error uploading file:', error);
-    return NextResponse.json({ success: false, error: 'File upload failed' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

@@ -41,7 +41,9 @@ export function ProductCard({ product }: ProductCardProps) {
     toggleWishlist(product.id);
   };
 
-  const productImage = getProductImage(product.collection, product.slug);
+  const productImage = (product.images && product.images.length > 0) 
+    ? product.images[0] 
+    : getProductImage(product.collection, product.slug);
 
   return (
     <Link href={`/shop/product/${product.slug}`}>

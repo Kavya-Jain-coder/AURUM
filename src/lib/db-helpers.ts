@@ -24,5 +24,12 @@ export function mapDbProductToClient(dbProd: any) {
     reviewCount: dbProd.reviewCount,
     isNew: dbProd.isNew,
     isBestseller: dbProd.isBestseller,
+    metalType: dbProd.metalType,
+    metalWeightGrams: dbProd.metalWeightGrams,
+    gemstoneType: dbProd.gemstoneType,
+    gemstoneCarat: dbProd.gemstoneCarat,
+    makingCharges: dbProd.makingCharges,
+    gemstoneVariants: dbProd.gemstoneVariants,
+    baseSize: dbProd.baseSize,
   };
 }
