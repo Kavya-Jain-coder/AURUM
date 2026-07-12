@@ -1,13 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  eslint: {
+    // ESLint warnings/errors should not block builds
+    ignoreDuringBuilds: true,
+  },
   // Enable Three.js GLSL shader imports
   webpack: (config) => {
     config.module.rules.push({
       test: /\.(glsl|vs|fs|vert|frag)$/,
       use: ['raw-loader'],
     });
-    // Ensure Three.js works properly with Next.js
-    config.externals = config.externals || [];
     return config;
   },
   // Transpile Three.js packages

@@ -60,14 +60,14 @@ export function LoadingScreen() {
                 initial={{ y: '100%', opacity: 0 }}
                 animate={{ y: '0%', opacity: 1 }}
                 transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-                className="relative w-80 h-28 select-none pointer-events-none"
+                className="relative w-96 h-28 select-none pointer-events-none"
               >
                 <Image
                   src="/images/Aurum_Logo.png"
                   alt="AURUM Logo"
                   fill
                   className="object-contain"
-                  style={{ filter: 'brightness(1.3) contrast(1.1)', mixBlendMode: 'screen', transform: 'scale(3.5)' }}
+                  style={{ filter: 'brightness(1.3) contrast(1.1)', mixBlendMode: 'screen', transform: 'scale(2.8)' }}
                   priority
                 />
               </motion.div>

@@ -12,12 +12,7 @@ import { useWishlistStore } from '@/store/wishlistStore';
 import { Navbar } from '@/components/ui/Navbar';
 import Link from 'next/link';
 
-const materials = [
-  { key: 'yellow-gold', label: 'Yellow Gold', color: '#C69B3C' },
-  { key: 'white-gold', label: 'White Gold', color: '#E8E8E8' },
-  { key: 'rose-gold', label: 'Rose Gold', color: '#D4A0A0' },
-  { key: 'platinum', label: 'Platinum', color: '#D8D8D8' },
-];
+
 
 const stones = [
   { key: 'diamond', label: 'Diamond', color: '#E8F0F8' },
@@ -104,23 +99,26 @@ export default function ProductDetailPage() {
 
   const product = dbProduct || getProductBySlug(slug);
 
-  const [selectedMaterial, setSelectedMaterial] = useState('yellow-gold');
   
-  const variantOptions = (product?.gemstoneVariants && product.gemstoneVariants.length > 0)
-    ? product.gemstoneVariants
-    : [
-        { 
-          type: product?.gemstoneType || 'Diamond VS-GH', 
-          color: '#E8F0F8', 
-          imagePath: product?.images?.[0] || '', 
-          baseCarat: parseFloat(product?.gemstoneCarat || '0.5')
-        }
-      ];
+  // Build variant options: always include the base gemstone as the first option
+  const baseVariant = { 
+    type: product?.gemstoneType || 'Diamond VS-GH', 
+    color: '#E8F0F8', 
+    imagePath: product?.images?.[0] || '', 
+    baseCarat: parseFloat(product?.gemstoneCarat || '0.5')
+  };
+  
+  const extraVariants = (product?.gemstoneVariants && product.gemstoneVariants.length > 0)
+    ? product.gemstoneVariants.filter((v: any) => v.type !== baseVariant.type)
+    : [];
+  
+  const variantOptions = [baseVariant, ...extraVariants];
   
   const [selectedVariantType, setSelectedVariantType] = useState(variantOptions[0]?.type || 'Diamond VS-GH');
   const [selectedSize, setSelectedSize] = useState('7');
   const [quantity, setQuantity] = useState(1);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [addedToCart, setAddedToCart] = useState(false);
 
   const addToCart = useCartStore((s) => s.addItem);
   const toggleWishlist = useWishlistStore((s) => s.toggleItem);
@@ -150,8 +148,11 @@ export default function ProductDetailPage() {
     displayPrice = isNaN(livePaise) ? (product?.price || 0) : Math.round(livePaise * 1.03); // add 3% GST
   }
 
-  // Display image dynamically based on selected stone
-  const currentImage = currentVariant?.imagePath || getProductImage(product?.collection || '', product?.slug || '');
+  // Display image: use product's main image by default, switch to variant image only if variant has its own image and it's not the base variant
+  const mainProductImage = product?.images?.[0] || getProductImage(product?.collection || '', product?.slug || '');
+  const currentImage = (currentVariant?.imagePath && currentVariant.type !== baseVariant.type) 
+    ? currentVariant.imagePath 
+    : mainProductImage;
 
 
   if (loading && !product) {
@@ -182,12 +183,15 @@ export default function ProductDetailPage() {
       slug: product.slug,
       price: displayPrice,
       quantity,
-      material: selectedMaterial,
+      material: product.metalType || 'yellow-gold',
       stone: selectedVariantType,
       size: selectedSize,
       imagePath: currentImage,
       modelPath: product.modelPath,
     });
+    setAddedToCart(true);
+    setQuantity(1);
+    setTimeout(() => setAddedToCart(false), 2500);
   };
 
   const collectionName = product.collection.charAt(0).toUpperCase() + product.collection.slice(1);
@@ -241,22 +245,7 @@ export default function ProductDetailPage() {
                 }}
               />
 
-              {/* Material color indicator */}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3">
-                {materials.map((mat) => (
-                  <button
-                    key={mat.key}
-                    onClick={() => setSelectedMaterial(mat.key)}
-                    className={`w-7 h-7 rounded-full border-2 transition-all duration-300 ${
-                      selectedMaterial === mat.key
-                        ? 'border-aurum-cream scale-110 shadow-lg'
-                        : 'border-aurum-mist/50 hover:border-aurum-ivory-deep'
-                    }`}
-                    style={{ background: mat.color }}
-                    title={mat.label}
-                  />
-                ))}
-              </div>
+
             </motion.div>
 
             {/* RIGHT — Product Info */}
@@ -399,10 +388,10 @@ export default function ProductDetailPage() {
               <div className="mt-8 space-y-3">
                 <button
                   onClick={handleAddToCart}
-                  className="btn-gold w-full text-sm py-4"
+                  className={`w-full text-sm py-4 transition-all duration-300 ${addedToCart ? 'bg-aurum-emerald text-aurum-cream border border-aurum-emerald' : 'btn-gold'}`}
                   style={{ height: '52px' }}
                 >
-                  Add to Cart
+                  {addedToCart ? '✓ Added to Cart' : 'Add to Cart'}
                 </button>
                 <button
                   onClick={() => toggleWishlist(product.id)}

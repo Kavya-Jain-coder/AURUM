@@ -7,15 +7,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useUiStore } from '@/store/uiStore';
-import { useState, useEffect } from 'react';
-
+import { useState, useEffect, useRef } from 'react';
+import { useSession, signOut } from 'next-auth/react';
 export function Navbar() {
   const pathname = usePathname();
   const isShopMode = pathname !== '/';
   const cartCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
   const wishlistCount = useWishlistStore((s) => s.items.length);
   const [searchOpen, setSearchOpen] = useState(false);
-
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+  const { data: session } = useSession();
   const scrollProgress = useUiStore((s) => s.scrollProgress);
   const showOnHome = scrollProgress > 0.85;
 
@@ -56,6 +58,17 @@ export function Navbar() {
   }, [ratesList.length]);
 
   const currentRate = ratesList[currentRateIndex];
+
+  // Close account dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setAccountOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (pathname === '/' && !showOnHome) return null;
 
@@ -181,16 +194,68 @@ export function Navbar() {
               </Link>
 
               {/* Account */}
-              <Link
-                href="/account"
-                className="scroll-chapter-content relative text-aurum-ivory-mid hover:text-aurum-cream transition-colors duration-300"
-                aria-label="Account"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-              </Link>
+              <div className="relative" ref={accountRef}>
+                <button
+                  onClick={() => setAccountOpen(!accountOpen)}
+                  className="scroll-chapter-content relative text-aurum-ivory-mid hover:text-aurum-cream transition-colors duration-300"
+                  aria-label="Account"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  {session && (
+                    <span className="absolute -top-1 -right-2 w-2.5 h-2.5 rounded-full bg-aurum-gold" />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {accountOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute right-0 top-10 w-56 bg-aurum-obsidian border border-aurum-mist/50 shadow-xl z-50"
+                    >
+                      {session ? (
+                        <>
+                          <div className="px-4 py-3 border-b border-aurum-mist/30">
+                            <p className="font-body text-aurum-ivory text-xs truncate">{session.user?.email}</p>
+                            <p className="font-body text-aurum-ivory-deep text-[10px] mt-0.5 uppercase tracking-[0.1em]">Signed In</p>
+                          </div>
+                          {/* @ts-expect-error session user role */}
+                          {(session.user?.role === 'admin' || session.user?.email === 'admin@aurum.com') && (
+                            <Link
+                              href="/admin"
+                              onClick={() => setAccountOpen(false)}
+                              className="block px-4 py-2.5 font-body text-xs text-aurum-gold hover:bg-aurum-shadow transition-colors"
+                            >
+                              Admin Dashboard
+                            </Link>
+                          )}
+                          <button
+                            onClick={() => { signOut({ callbackUrl: '/auth' }); setAccountOpen(false); }}
+                            className="w-full text-left px-4 py-2.5 font-body text-xs text-aurum-ruby hover:bg-aurum-shadow transition-colors"
+                          >
+                            Log Out
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <Link
+                            href="/auth"
+                            onClick={() => setAccountOpen(false)}
+                            className="block px-4 py-3 font-body text-xs text-aurum-ivory hover:bg-aurum-shadow transition-colors"
+                          >
+                            Sign In / Create Account
+                          </Link>
+                        </>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </div>

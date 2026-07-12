@@ -29,7 +29,15 @@ export function mapDbProductToClient(dbProd: any) {
     gemstoneType: dbProd.gemstoneType,
     gemstoneCarat: dbProd.gemstoneCarat,
     makingCharges: dbProd.makingCharges,
-    gemstoneVariants: dbProd.gemstoneVariants,
+    gemstoneVariants: (() => {
+      const raw = dbProd.gemstoneVariants;
+      if (!raw) return null;
+      if (Array.isArray(raw)) return raw;
+      if (typeof raw === 'string') {
+        try { return JSON.parse(raw); } catch { return null; }
+      }
+      return raw;
+    })(),
     baseSize: dbProd.baseSize,
   };
 }

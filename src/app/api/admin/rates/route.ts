@@ -21,6 +21,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Invalid rates data' }, { status: 400 });
     }
 
+    if (!db) {
+      return NextResponse.json({ success: false, error: 'Database not connected' }, { status: 503 });
+    }
+
     // Insert all new rates with current timestamp
     await db.insert(marketRates).values(
       rates.map((r: any) => ({

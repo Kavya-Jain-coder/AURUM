@@ -2,9 +2,11 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCartStore } from '@/store/cartStore';
 import { formatPrice } from '@/lib/products';
 import { Navbar } from '@/components/ui/Navbar';
+import { useState, useEffect } from 'react';
 
 export default function CartPage() {
   const items = useCartStore((s) => s.items);
@@ -12,11 +14,28 @@ export default function CartPage() {
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const getTotal = useCartStore((s) => s.getTotal);
 
+  // Fix hydration mismatch with persisted Zustand store
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+
   const total = getTotal();
   const deliveryFee = total >= 500000 ? 0 : 50000; // Free above ₹5,000
   const insurance = 50000; // ₹500
   const gst = Math.round(total * 0.03); // 3%
   const grandTotal = total + deliveryFee + insurance + gst;
+
+  if (!hydrated) {
+    return (
+      <>
+        <Navbar />
+        <main className="min-h-screen bg-aurum-void pt-20 pb-20">
+          <div className="max-w-[1200px] mx-auto px-6 md:px-12 flex items-center justify-center py-20">
+            <div className="w-8 h-8 rounded-full border border-aurum-gold-dim border-t-aurum-gold animate-spin" />
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
@@ -59,17 +78,28 @@ export default function CartPage() {
               <div className="space-y-0">
                 {items.map((item, i) => (
                   <motion.div
-                    key={`${item.productId}-${item.material}-${item.stone}`}
+                    key={`${item.productId}-${item.material}-${item.stone}-${item.size || ''}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
                     className="flex gap-6 py-6 border-b border-aurum-mist"
                   >
-                    {/* Item image placeholder */}
-                    <div className="w-24 h-24 bg-aurum-obsidian flex-shrink-0 flex items-center justify-center">
-                      <svg width="40" height="40" viewBox="0 0 40 40" className="opacity-30">
-                        <circle cx="20" cy="20" r="10" fill="none" stroke="#C69B3C" strokeWidth="1" />
-                      </svg>
+                    {/* Item image */}
+                    <div className="relative w-24 h-24 bg-aurum-obsidian flex-shrink-0 border border-aurum-mist/20 overflow-hidden">
+                      {item.imagePath ? (
+                        <Image
+                          src={item.imagePath}
+                          alt={item.name}
+                          fill
+                          className="object-contain p-1"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <svg width="40" height="40" viewBox="0 0 40 40" className="opacity-30">
+                            <circle cx="20" cy="20" r="10" fill="none" stroke="#C69B3C" strokeWidth="1" />
+                          </svg>
+                        </div>
+                      )}
                     </div>
 
                     {/* Item details */}
@@ -89,7 +119,7 @@ export default function CartPage() {
                         {/* Quantity */}
                         <div className="flex items-center border border-aurum-mist">
                           <button
-                            onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.productId, item.material, item.stone, item.size, item.quantity - 1)}
                             className="w-7 h-7 flex items-center justify-center text-aurum-ivory-mid hover:text-aurum-cream text-xs"
                           >
                             −
@@ -98,7 +128,7 @@ export default function CartPage() {
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.productId, item.material, item.stone, item.size, item.quantity + 1)}
                             className="w-7 h-7 flex items-center justify-center text-aurum-ivory-mid hover:text-aurum-cream text-xs"
                           >
                             +
@@ -107,7 +137,7 @@ export default function CartPage() {
 
                         {/* Remove */}
                         <button
-                          onClick={() => removeItem(item.productId)}
+                          onClick={() => removeItem(item.productId, item.material, item.stone, item.size)}
                           className="font-body text-aurum-ivory-deep text-xs hover:text-aurum-gold transition-colors"
                         >
                           Remove
